@@ -11,10 +11,12 @@
 
 void *LoadLib(const char *name)
 {
-    // Ivan
+#ifdef _WINRT
     return nullptr;
-//    std::wstring wname{utf8_to_wstr(name)};
-//    return LoadLibraryW(wname.c_str());
+#else
+    std::wstring wname{utf8_to_wstr(name)};
+    return LoadLibraryW(wname.c_str());
+#endif
 }
 void CloseLib(void *handle)
 { FreeLibrary(static_cast<HMODULE>(handle)); }

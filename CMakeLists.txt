@@ -199,6 +199,7 @@ if(MSVC)
     endif()
 	if(WINRT)
 		set(C_FLAGS ${C_FLAGS} /ZW)
+		add_compile_definitions(_WINRT)
     endif()
     set(C_FLAGS ${C_FLAGS} /W4 /w14640 /wd4065 /wd4268 /wd4324 /wd5030)
 

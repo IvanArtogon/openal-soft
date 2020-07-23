@@ -45,9 +45,10 @@ namespace al {
 
 al::optional<std::string> getenv(const char *envname)
 {
-    // Ivan
-//    const char *str{std::getenv(envname)};
-//    if(str && str[0] != '\0') return str;
+#ifndef _WINRT
+    const char *str{std::getenv(envname)};
+    if(str && str[0] != '\0') return str;
+#endif // !_WINRT
     return al::nullopt;
 }
 

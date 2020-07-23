@@ -284,7 +284,8 @@ void LoadConfigFromFile(std::istream &f)
 void ReadALConfig()
 {
     WCHAR buffer[MAX_PATH];
-    if(0) //Ivan SHGetSpecialFolderPathW(nullptr, buffer, CSIDL_APPDATA, FALSE) != FALSE)
+#ifndef _WINRT
+    if(SHGetSpecialFolderPathW(nullptr, buffer, CSIDL_APPDATA, FALSE) != FALSE)
     {
         std::string filepath{wstr_to_utf8(buffer)};
         filepath += "\\alsoft.ini";
@@ -294,6 +295,7 @@ void ReadALConfig()
         if(f.is_open())
             LoadConfigFromFile(f);
     }
+#endif // !_WINRT
 
     std::string ppath{GetProcBinary().path};
     if(!ppath.empty())
