@@ -115,6 +115,9 @@
 #ifdef HAVE_WASAPI
 #include "backends/wasapi.h"
 #endif
+#ifdef HAVE_WASAPI_UWP
+#include "backends/wasapiuwp.h"
+#endif
 #ifdef HAVE_COREAUDIO
 #include "backends/coreaudio.h"
 #endif
@@ -177,6 +180,9 @@ BackendInfo BackendList[] = {
 #endif
 #ifdef HAVE_WASAPI
     { "wasapi", WasapiBackendFactory::getFactory },
+#endif
+#ifdef HAVE_WASAPI_UWP
+    { "wasapiuwp", WasapiUwpBackendFactory::getFactory },
 #endif
 #ifdef HAVE_COREAUDIO
     { "core", CoreAudioBackendFactory::getFactory },
