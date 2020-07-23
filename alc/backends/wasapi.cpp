@@ -77,7 +77,7 @@ DEFINE_GUID(KSDATAFORMAT_SUBTYPE_PCM, 0x00000001, 0x0000, 0x0010, 0x80, 0x00, 0x
 DEFINE_GUID(KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, 0x00000003, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 #endif
 
-DEFINE_DEVPROPKEY(DEVPKEY_Device_FriendlyName, 0xa45c254e, 0xdf1c, 0x4efd, 0x80,0x20, 0x67,0xd1,0x46,0xa8,0x50,0xe0, 14);
+//Ivan DEFINE_DEVPROPKEY(DEVPKEY_Device_FriendlyName, 0xa45c254e, 0xdf1c, 0x4efd, 0x80,0x20, 0x67,0xd1,0x46,0xa8,0x50,0xe0, 14);
 DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_FormFactor, 0x1da5d803, 0xd492, 0x4edd, 0x8c,0x23, 0xe0,0xc0,0xff,0xee,0x7f,0x0e, 0);
 DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_GUID, 0x1da5d803, 0xd492, 0x4edd, 0x8c, 0x23,0xe0, 0xc0,0xff,0xee,0x7f,0x0e, 4 );
 
@@ -182,9 +182,12 @@ bool checkName(const al::vector<DevMap> &list, const std::string &name)
 }
 
 al::vector<DevMap> PlaybackDevices;
+#ifdef WASAPI_CAPTURE
 al::vector<DevMap> CaptureDevices;
+#endif // WASAPI_CAPTURE
 
 
+/*
 using NameGUIDPair = std::pair<std::string,std::string>;
 NameGUIDPair get_device_name_and_guid(IMMDevice *device)
 {
@@ -342,7 +345,7 @@ void probe_devices(IMMDeviceEnumerator *devenum, EDataFlow flowdir, al::vector<D
     if(defdevid) CoTaskMemFree(defdevid);
     coll->Release();
 }
-
+*/
 
 bool MakeExtensible(WAVEFORMATEXTENSIBLE *out, const WAVEFORMATEX *in)
 {
@@ -519,7 +522,7 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
         promise->set_value(cohr);
         return 0;
     }
-
+    /*
     void *ptr{};
     HRESULT hr{CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_INPROC_SERVER,
         IID_IMMDeviceEnumerator, &ptr)};
@@ -533,6 +536,7 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
     auto Enumerator = static_cast<IMMDeviceEnumerator*>(ptr);
     Enumerator->Release();
     Enumerator = nullptr;
+    */
     CoUninitialize();
 
     TRACE("Message thread initialization complete\n");
@@ -542,6 +546,7 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
     TRACE("Starting message loop\n");
     ALuint deviceCount{0};
     Msg msg;
+    HRESULT hr;
     while(popMessage(msg))
     {
         TRACE("Got message \"%s\" (0x%04x, this=%p)\n",
@@ -593,12 +598,13 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
             hr = cohr = S_OK;
             if(++deviceCount == 1)
                 hr = cohr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-            if(SUCCEEDED(hr))
-                hr = CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_INPROC_SERVER, IID_IMMDeviceEnumerator, &ptr);
+            if (SUCCEEDED(hr))
+                ;// hr = CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_INPROC_SERVER, IID_IMMDeviceEnumerator, &ptr);
             if(FAILED(hr))
                 msg.mPromise.set_value(hr);
             else
             {
+                /*
                 Enumerator = static_cast<IMMDeviceEnumerator*>(ptr);
 
                 if(msg.mType == MsgType::EnumeratePlayback)
@@ -609,6 +615,7 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
 
                 Enumerator->Release();
                 Enumerator = nullptr;
+                */
             }
 
             if(--deviceCount == 0 && SUCCEEDED(cohr))
@@ -649,7 +656,7 @@ struct WasapiPlayback final : public BackendBase, WasapiProxy {
     std::wstring mDevId;
 
     HRESULT mOpenStatus{E_FAIL};
-    IMMDevice *mMMDev{nullptr};
+    //IMMDevice *mMMDev{nullptr};
     IAudioClient *mClient{nullptr};
     IAudioRenderClient *mRender{nullptr};
     HANDLE mNotifyEvent{nullptr};
@@ -798,6 +805,7 @@ void WasapiPlayback::open(const ALCchar *name)
 
 HRESULT WasapiPlayback::openProxy()
 {
+    /*
     void *ptr;
     HRESULT hr{CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_INPROC_SERVER, IID_IMMDeviceEnumerator, &ptr)};
     if(SUCCEEDED(hr))
@@ -824,8 +832,8 @@ HRESULT WasapiPlayback::openProxy()
             mMMDev->Release();
         mMMDev = nullptr;
     }
-
-    return hr;
+    */
+    return E_FAIL;// hr;
 }
 
 void WasapiPlayback::closeProxy()
@@ -834,9 +842,9 @@ void WasapiPlayback::closeProxy()
         mClient->Release();
     mClient = nullptr;
 
-    if(mMMDev)
-        mMMDev->Release();
-    mMMDev = nullptr;
+//    if(mMMDev)
+//        mMMDev->Release();
+//    mMMDev = nullptr;
 }
 
 
@@ -854,6 +862,7 @@ HRESULT WasapiPlayback::resetProxy()
         mClient->Release();
     mClient = nullptr;
 
+    /*
     void *ptr;
     HRESULT hr = mMMDev->Activate(IID_IAudioClient, CLSCTX_INPROC_SERVER, nullptr, &ptr);
     if(FAILED(hr))
@@ -862,9 +871,10 @@ HRESULT WasapiPlayback::resetProxy()
         return hr;
     }
     mClient = static_cast<IAudioClient*>(ptr);
+    */
 
     WAVEFORMATEX *wfx;
-    hr = mClient->GetMixFormat(&wfx);
+    HRESULT hr = mClient->GetMixFormat(&wfx);
     if(FAILED(hr))
     {
         ERR("Failed to get mix format: 0x%08lx\n", hr);
@@ -1063,10 +1073,10 @@ HRESULT WasapiPlayback::resetProxy()
     }
     mFrameStep = OutputType.Format.nChannels;
 
-    EndpointFormFactor formfactor{UnknownFormFactor};
-    get_device_formfactor(mMMDev, &formfactor);
-    mDevice->IsHeadphones = (mDevice->FmtChans == DevFmtStereo
-        && (formfactor == Headphones || formfactor == Headset));
+//    EndpointFormFactor formfactor{UnknownFormFactor};
+//    get_device_formfactor(mMMDev, &formfactor);
+//    mDevice->IsHeadphones = (mDevice->FmtChans == DevFmtStereo
+//        && (formfactor == Headphones || formfactor == Headset));
 
     setChannelOrderFromWFXMask(OutputType.dwChannelMask);
 
@@ -1177,7 +1187,7 @@ ClockLatency WasapiPlayback::getClockLatency()
     return ret;
 }
 
-
+#ifdef WASAPI_CAPTURE
 struct WasapiCapture final : public BackendBase, WasapiProxy {
     WasapiCapture(ALCdevice *device) noexcept : BackendBase{device} { }
     ~WasapiCapture() override;
@@ -1721,6 +1731,8 @@ ALCenum WasapiCapture::captureSamples(al::byte *buffer, ALCuint samples)
     return ALC_NO_ERROR;
 }
 
+#endif // WASAPI_CAPTURE
+
 } // namespace
 
 
@@ -1743,7 +1755,13 @@ bool WasapiBackendFactory::init()
 }
 
 bool WasapiBackendFactory::querySupport(BackendType type)
-{ return type == BackendType::Playback || type == BackendType::Capture; }
+{ 
+    return type == BackendType::Playback 
+#ifdef WASAPI_CAPTURE
+    || type == BackendType::Capture
+#endif // WASAPI_CAPTURE
+    ; 
+}
 
 std::string WasapiBackendFactory::probe(BackendType type)
 {
@@ -1764,9 +1782,11 @@ std::string WasapiBackendFactory::probe(BackendType type)
         break;
 
     case BackendType::Capture:
+#ifdef WASAPI_CAPTURE
         WasapiProxy::pushMessageStatic(MsgType::EnumerateCapture).wait();
         std::for_each(CaptureDevices.cbegin(), CaptureDevices.cend(), add_device);
-        break;
+#endif // WASAPI_CAPTURE
+            break;
     }
 
     return outnames;
@@ -1776,9 +1796,11 @@ BackendPtr WasapiBackendFactory::createBackend(ALCdevice *device, BackendType ty
 {
     if(type == BackendType::Playback)
         return BackendPtr{new WasapiPlayback{device}};
+#ifdef WASAPI_CAPTURE
     if(type == BackendType::Capture)
         return BackendPtr{new WasapiCapture{device}};
-    return nullptr;
+#endif // WASAPI_CAPTURE
+return nullptr;
 }
 
 BackendFactory &WasapiBackendFactory::getFactory()

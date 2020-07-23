@@ -11,8 +11,10 @@
 
 void *LoadLib(const char *name)
 {
-    std::wstring wname{utf8_to_wstr(name)};
-    return LoadLibraryW(wname.c_str());
+    // Ivan
+    return nullptr;
+//    std::wstring wname{utf8_to_wstr(name)};
+//    return LoadLibraryW(wname.c_str());
 }
 void CloseLib(void *handle)
 { FreeLibrary(static_cast<HMODULE>(handle)); }

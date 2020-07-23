@@ -284,7 +284,7 @@ void LoadConfigFromFile(std::istream &f)
 void ReadALConfig()
 {
     WCHAR buffer[MAX_PATH];
-    if(SHGetSpecialFolderPathW(nullptr, buffer, CSIDL_APPDATA, FALSE) != FALSE)
+    if(0) //Ivan SHGetSpecialFolderPathW(nullptr, buffer, CSIDL_APPDATA, FALSE) != FALSE)
     {
         std::string filepath{wstr_to_utf8(buffer)};
         filepath += "\\alsoft.ini";

@@ -98,13 +98,15 @@ bool filebuf::open(const wchar_t *filename, std::ios_base::openmode mode)
 {
     if((mode&std::ios_base::out) || !(mode&std::ios_base::in))
         return false;
-    HANDLE f{CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL, nullptr)};
-    if(f == INVALID_HANDLE_VALUE) return false;
+    // Ivan
+    return false;
+//    HANDLE f{CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+//        FILE_ATTRIBUTE_NORMAL, nullptr)};
+//    if(f == INVALID_HANDLE_VALUE) return false;
 
     if(mFile != INVALID_HANDLE_VALUE)
         CloseHandle(mFile);
-    mFile = f;
+//    mFile = f;
 
     setg(nullptr, nullptr, nullptr);
     return true;

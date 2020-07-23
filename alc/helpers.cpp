@@ -182,6 +182,7 @@ al::vector<std::string> SearchDataFiles(const char *ext, const char *subdir)
     DirectorySearch(path.c_str(), ext, &results);
 
     /* Search the local and global data dirs. */
+    /* Ivan
     static const int ids[2]{ CSIDL_APPDATA, CSIDL_COMMON_APPDATA };
     for(int id : ids)
     {
@@ -197,6 +198,7 @@ al::vector<std::string> SearchDataFiles(const char *ext, const char *subdir)
 
         DirectorySearch(path.c_str(), ext, &results);
     }
+    */
 
     return results;
 }
