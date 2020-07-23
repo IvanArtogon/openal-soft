@@ -115,6 +115,8 @@ if("${CMAKE_C_PLATFORM_ID}" STREQUAL "QNX")
     set(LINKER_FLAGS ${LINKER_FLAGS} -L/usr/lib)
 endif()
 
+set(LIBTYPE STATIC) #Ivan
+
 if(NOT LIBTYPE)
     set(LIBTYPE SHARED)
 endif()
@@ -684,7 +686,7 @@ option(ALSOFT_REQUIRE_SSE3 "Require SSE3 support" OFF)
 if(HAVE_EMMINTRIN_H)
     option(ALSOFT_CPUEXT_SSE3 "Enable SSE3 support" ON)
     if(HAVE_SSE2 AND ALSOFT_CPUEXT_SSE3)
-        set(HAVE_SSE3 1)
+        #Ivan set(HAVE_SSE3 1)
         set(ALC_OBJS  ${ALC_OBJS} alc/mixer/mixer_sse3.cpp)
         if(SSE2_SWITCH)
             set_source_files_properties(alc/mixer/mixer_sse3.cpp PROPERTIES
@@ -701,7 +703,7 @@ option(ALSOFT_REQUIRE_SSE4_1 "Require SSE4.1 support" OFF)
 if(HAVE_SMMINTRIN_H)
     option(ALSOFT_CPUEXT_SSE4_1 "Enable SSE4.1 support" ON)
     if(HAVE_SSE3 AND ALSOFT_CPUEXT_SSE4_1)
-        set(HAVE_SSE4_1 1)
+        #Ivan set(HAVE_SSE4_1 1)
         set(ALC_OBJS  ${ALC_OBJS} alc/mixer/mixer_sse41.cpp)
         if(SSE4_1_SWITCH)
             set_source_files_properties(alc/mixer/mixer_sse41.cpp PROPERTIES
@@ -853,7 +855,7 @@ if(WIN32)
     endif()
 
     # Check MMSystem backend
-    check_include_files("windows.h;mmsystem.h" HAVE_MMSYSTEM_H)
+    #Ivan check_include_files("windows.h;mmsystem.h" HAVE_MMSYSTEM_H)
     find_library(WINMM_LIBRARY NAMES winmm
         PATHS ${WINSDK_LIB_DIRS})
     if(HAVE_MMSYSTEM_H AND WINMM_LIBRARY)
@@ -867,7 +869,7 @@ if(WIN32)
     endif()
 
     # Check DSound backend
-    find_package(DSound)
+    #Ivanfind_package(DSound)
     if(DSOUND_FOUND)
         option(ALSOFT_BACKEND_DSOUND "Enable DirectSound backend" ON)
         if(ALSOFT_BACKEND_DSOUND)
@@ -1058,12 +1060,12 @@ if(ALSOFT_REQUIRE_SDL2 AND NOT SDL2_FOUND)
 endif()
 
 # Optionally enable the Wave Writer backend
-option(ALSOFT_BACKEND_WAVE "Enable Wave Writer backend" ON)
-if(ALSOFT_BACKEND_WAVE)
-    set(HAVE_WAVE 1)
-    set(ALC_OBJS  ${ALC_OBJS} alc/backends/wave.cpp alc/backends/wave.h)
-    set(BACKENDS  "${BACKENDS} WaveFile,")
-endif()
+#option(ALSOFT_BACKEND_WAVE "Enable Wave Writer backend" OFF) #Ivan
+#if(ALSOFT_BACKEND_WAVE)
+#    set(HAVE_WAVE 1)
+#    set(ALC_OBJS  ${ALC_OBJS} alc/backends/wave.cpp alc/backends/wave.h)
+#    set(BACKENDS  "${BACKENDS} WaveFile,")
+#endif()
 
 # This is always available
 set(BACKENDS  "${BACKENDS} Null")
