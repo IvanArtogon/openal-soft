@@ -1,5 +1,5 @@
-#ifndef BACKENDS_WASAPI_H
-#define BACKENDS_WASAPI_H
+#ifndef BACKENDS_WASAPI_UWP_H
+#define BACKENDS_WASAPI_UWP_H
 
 #include "backends/base.h"
 
@@ -16,4 +16,4 @@ public:
     static BackendFactory &getFactory();
 };
 
-#endif /* BACKENDS_WASAPI_H */
+#endif /* BACKENDS_WASAPI_UWP_H */
