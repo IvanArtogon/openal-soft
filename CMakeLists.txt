@@ -1082,12 +1082,12 @@ if(ALSOFT_REQUIRE_SDL2 AND NOT SDL2_FOUND)
 endif()
 
 # Optionally enable the Wave Writer backend
-#option(ALSOFT_BACKEND_WAVE "Enable Wave Writer backend" OFF) #Ivan
-#if(ALSOFT_BACKEND_WAVE)
-#    set(HAVE_WAVE 1)
-#    set(ALC_OBJS  ${ALC_OBJS} alc/backends/wave.cpp alc/backends/wave.h)
-#    set(BACKENDS  "${BACKENDS} WaveFile,")
-#endif()
+option(ALSOFT_BACKEND_WAVE "Enable Wave Writer backend" OFF) #Ivan
+if(ALSOFT_BACKEND_WAVE)
+    set(HAVE_WAVE 1)
+    set(ALC_OBJS  ${ALC_OBJS} alc/backends/wave.cpp alc/backends/wave.h)
+    set(BACKENDS  "${BACKENDS} WaveFile,")
+endif()
 
 # This is always available
 set(BACKENDS  "${BACKENDS} Null")

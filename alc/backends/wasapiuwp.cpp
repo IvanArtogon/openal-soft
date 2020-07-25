@@ -420,6 +420,7 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
             return E_FAIL;
         }
     }
+    SAFE_RELEASE(punkAudioInterface);
 
     WAVEFORMATEX *wfx;
     hr = mClient->GetMixFormat(&wfx);
