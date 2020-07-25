@@ -716,6 +716,8 @@ void WasapiPlayback::stop()
     mKillNow.store(true, std::memory_order_release);
     mThread.join();
 
+    SAFE_RELEASE(mRender);
+    mRender = nullptr;
     mClient->Stop();
 }
 
