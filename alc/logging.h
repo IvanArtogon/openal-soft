@@ -22,6 +22,14 @@ extern FILE *gLogFile;
 #define LOG_ANDROID(T, ...) ((void)0)
 #endif
 
+
+#ifdef _WINRT
+#include <Windows.h>
+#define LOG_WINRT(...) do { char buf[1024]; sprintf(buf, __VA_ARGS__); OutputDebugStringA(buf); } while(0)
+#else
+#define LOG_WINRT(...) ((void)0)
+#endif
+
 enum LogLevel {
     NoLog,
     LogError,
@@ -35,18 +43,21 @@ extern LogLevel gLogLevel;
     if UNLIKELY(gLogLevel >= LogTrace)                                        \
         AL_PRINT(gLogFile, "AL lib: (II) " __VA_ARGS__);                      \
     LOG_ANDROID(ANDROID_LOG_DEBUG, __VA_ARGS__);                              \
+    LOG_WINRT(__VA_ARGS__);                                                   \
 } while(0)
 
 #define WARN(...) do {                                                        \
     if UNLIKELY(gLogLevel >= LogWarning)                                      \
         AL_PRINT(gLogFile, "AL lib: (WW) " __VA_ARGS__);                      \
     LOG_ANDROID(ANDROID_LOG_WARN, __VA_ARGS__);                               \
+    LOG_WINRT(__VA_ARGS__);                                                   \
 } while(0)
 
 #define ERR(...) do {                                                         \
     if UNLIKELY(gLogLevel >= LogError)                                        \
         AL_PRINT(gLogFile, "AL lib: (EE) " __VA_ARGS__);                      \
     LOG_ANDROID(ANDROID_LOG_ERROR, __VA_ARGS__);                              \
+    LOG_WINRT(__VA_ARGS__);                                                   \
 } while(0)
 
 #endif /* LOGGING_H */
