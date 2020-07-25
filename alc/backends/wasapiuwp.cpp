@@ -260,6 +260,7 @@ struct WasapiPlayback final : public RuntimeClass< RuntimeClassFlags< ClassicCom
 
     std::atomic<bool> mKillNow{true};
     std::thread mThread;
+    std::promise<bool> mActivateCompletedPromise;
 
     DEF_NEWDEL(WasapiPlayback)
 };
@@ -378,17 +379,9 @@ void WasapiPlayback::open(const ALCchar *name)
 
 bool WasapiPlayback::reset()
 {
-    if (mClient) {
-        HRESULT hr = mClient->Reset();
-        return hr == S_OK;
-    }
-    return true;
-}
-
-
-void WasapiPlayback::start()
-{
     close();
+
+    mActivateCompletedPromise.swap(decltype(mActivateCompletedPromise)()); // Reset promise
 
     IActivateAudioInterfaceAsyncOperation *asyncOp{ nullptr };
     HRESULT hr = ActivateAudioInterfaceAsync(mDevId.data(), __uuidof(IAudioClient), nullptr, this, &asyncOp);
@@ -396,7 +389,13 @@ void WasapiPlayback::start()
     if (FAILED(hr))
     {
         ERR("Failed to activate audio client: 0x%08lx\n", hr);
+        return false;
     }
+
+    // Wait ActivateCompleted to be finished
+    auto activateCompletedFuture = mActivateCompletedPromise.get_future();
+    activateCompletedFuture.wait();
+    return activateCompletedFuture.get();
 }
 
 //
@@ -417,16 +416,20 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
         punkAudioInterface->QueryInterface(IID_PPV_ARGS(&mClient));
         if (nullptr == mClient)
         {
+            ERR("Failed to QueryInterface for mClient");
+            mActivateCompletedPromise.set_value(false);
             return E_FAIL;
         }
     }
     SAFE_RELEASE(punkAudioInterface);
+    punkAudioInterface = nullptr;
 
     WAVEFORMATEX *wfx;
     hr = mClient->GetMixFormat(&wfx);
     if(FAILED(hr))
     {
         ERR("Failed to get mix format: 0x%08lx\n", hr);
+        mActivateCompletedPromise.set_value(false);
         return hr;
     }
 
@@ -434,6 +437,7 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
     if(!MakeExtensible(&OutputType, wfx))
     {
         CoTaskMemFree(wfx);
+        mActivateCompletedPromise.set_value(false);
         return E_FAIL;
     }
     CoTaskMemFree(wfx);
@@ -550,6 +554,7 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
     if(FAILED(hr))
     {
         ERR("Failed to find a supported format: 0x%08lx\n", hr);
+        mActivateCompletedPromise.set_value(false);
         return hr;
     }
 
@@ -559,6 +564,7 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
         if(!MakeExtensible(&OutputType, wfx))
         {
             CoTaskMemFree(wfx);
+            mActivateCompletedPromise.set_value(false);
             return E_FAIL;
         }
         CoTaskMemFree(wfx);
@@ -634,6 +640,7 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
     if(FAILED(hr))
     {
         ERR("Failed to initialize audio client: 0x%08lx\n", hr);
+        mActivateCompletedPromise.set_value(false);
         return hr;
     }
 
@@ -645,6 +652,7 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
     if(FAILED(hr))
     {
         ERR("Failed to get audio buffer info: 0x%08lx\n", hr);
+        mActivateCompletedPromise.set_value(false);
         return hr;
     }
 
@@ -658,7 +666,27 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
     if(FAILED(hr))
     {
         ERR("Failed to set event handle: 0x%08lx\n", hr);
+        mActivateCompletedPromise.set_value(false);
         return hr;
+    }
+
+    mActivateCompletedPromise.set_value(true);
+    return hr;
+    // Need to return S_OK
+    //return S_OK;
+}
+
+
+void WasapiPlayback::start()
+{
+    ResetEvent(mNotifyEvent);
+
+    // Start ///////////
+    HRESULT hr = mClient->Start();
+    if (FAILED(hr))
+    {
+        ERR("Failed to start audio client: 0x%08lx\n", hr);
+        return;
     }
 
     // Get the render client
@@ -666,16 +694,7 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
     if (FAILED(hr))
     {
         ERR("Failed to get IAudioRenderClient: 0x%08lx\n", hr);
-        return hr;
-    }
-
-
-    // Start ///////////
-    hr = mClient->Start();
-    if (FAILED(hr))
-    {
-        ERR("Failed to start audio client: 0x%08lx\n", hr);
-        return hr;
+        return;
     }
 
     try {
@@ -685,14 +704,8 @@ HRESULT WasapiPlayback::ActivateCompleted(IActivateAudioInterfaceAsyncOperation 
     catch (...) {
         ERR("Failed to start thread\n");
         mClient->Stop();
-        return E_FAIL;
     }
-
-    return hr;
-    // Need to return S_OK
-    //return S_OK;
 }
-
 
 
 void WasapiPlayback::stop()
